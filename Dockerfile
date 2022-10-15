@@ -1,19 +1,32 @@
-FROM node:14-alpine AS development
+# Reference: https://www.tomray.dev/nestjs-docker-production
+FROM node:18-alpine As development
+
+RUN apk --no-cache add --virtual builds-deps build-base python3 && \
+    ln -sf python3 /usr/bin/python
 
 WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install glob rimraf
-RUN npm install --only=development
-COPY . .
+
+COPY --chown=node:node package*.json ./
+RUN npm ci
+COPY --chown=node:node . .
+USER node
+
+FROM node:18-alpine As build
+RUN apk --no-cache add --virtual builds-deps build-base python3 && \
+    ln -sf python3 /usr/bin/python
+
+WORKDIR /usr/src/app
+COPY --chown=node:node package*.json ./
+COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node . .
 RUN npm run build
+ENV NODE_ENV production
+RUN npm ci --only=production && npm cache clean --force
+USER node
 
-FROM node:14-alpine as production
+FROM node:18-alpine As production
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install --only=production
-COPY . .
-COPY --from=development /usr/src/app/dist ./dist
-CMD ["node", "dist/main"]
+COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+
+CMD [ "node", "dist/main.js" ]

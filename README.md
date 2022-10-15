@@ -1,4 +1,4 @@
-# DevZone API using [Nest](https://github.com/nestjs/nest)
+# DevZone API using [Nest](https://nestjs.com/)
 
 ## Installation
 
