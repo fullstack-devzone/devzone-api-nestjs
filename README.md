@@ -1,4 +1,6 @@
-# DevZone API using [Nest](https://nestjs.com/)
+# DevZone API using NestJS
+
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Installation
 
@@ -31,8 +33,3 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
-
-## DB Migration
-
-* Creating a migration: `npm run typeorm:migration:generate -- <MigrationName>`
-* Run a migration: `npm run typeorm:migration:run`

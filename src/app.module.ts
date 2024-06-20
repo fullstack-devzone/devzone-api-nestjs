@@ -1,26 +1,22 @@
 import { Module } from '@nestjs/common';
-import { LinksModule } from './links/links.module';
-import { DatabaseModule } from './database.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import ConfigLoader from './ConfigLoader';
+import { PostsModule } from './posts/posts.module';
+import { DatabaseModule } from './database.module';
+import { AuthModule } from './auth/auth.module';
+import configuration from './configuration';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      //envFilePath: ['.env'],
-      load: [ConfigLoader],
+      envFilePath: ['.env'],
+      load: [configuration],
     }),
-    ScheduleModule.forRoot(),
     DatabaseModule,
-    LinksModule,
-    AuthModule,
     UsersModule,
+    PostsModule,
+    AuthModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

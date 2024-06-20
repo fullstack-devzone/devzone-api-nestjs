@@ -1,16 +1,35 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { User } from '../entities/user.entity';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { CreateUserDto, UserDto } from './users.dtos';
+import { mapToUserDto } from './user.mapper';
 
-@ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+  constructor(private usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return this.userService.create(createUserDto);
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() createUserDto: CreateUserDto): Promise<UserDto> {
+    return this.usersService
+      .createUser(createUserDto)
+      .then((user) => mapToUserDto(user));
+  }
+
+  @Get(':userId')
+  async getUserById(@Param('userId') userId: number): Promise<UserDto> {
+    const user = await this.usersService.getUserById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
+    return mapToUserDto(user);
   }
 }

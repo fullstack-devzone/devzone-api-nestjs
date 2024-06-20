@@ -1,49 +1,50 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
+import { CreateUserDto } from './users.dtos';
 import { User } from '../entities/user.entity';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { Role } from '../entities/role.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
   constructor(
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
-  async findById(userId: number): Promise<User | undefined> {
-    this.logger.log('Finding user with id: ', userId);
-    return this.userRepository
-      .createQueryBuilder('user')
-      .where('user.id = :id', { id: userId })
-      .leftJoinAndSelect('user.roles', 'roles')
-      .getOne();
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const count = await this.userRepository.countBy({
+      email: createUserDto.email,
+    });
+    if (count !== 0) {
+      throw new BadRequestException('Email already exists');
+    }
+    const password = await bcrypt.hash(createUserDto.password, 10);
+    const user = new User(
+      createUserDto.name,
+      createUserDto.email,
+      password,
+      'ROLE_USER',
+    );
+    const savedUser = await this.userRepository.save(user);
+    return Promise.resolve(savedUser);
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    this.logger.log('Finding user with email: ', email);
-    return this.userRepository
-      .createQueryBuilder('user')
-      .where('user.email = :email', { email: email })
-      .leftJoinAndSelect('user.roles', 'roles')
-      .getOne();
+  async getUserById(userId: number): Promise<User | undefined> {
+    this.logger.log(`Finding user with id: ${userId}`);
+    const user = await this.userRepository.findOneBy({ id: userId });
+    return Promise.resolve(user);
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = new User();
-    user.name = createUserDto.name;
-    user.email = createUserDto.email;
-    user.password = await bcrypt.hash(createUserDto.password, 10);
-    user.created_date = new Date();
-
-    const userRole = await this.roleRepository
-      .createQueryBuilder('role')
-      .where('role.name = :name', { name: 'ROLE_USER' })
-      .getOne();
-    user.roles = [userRole];
-    return this.userRepository.save(user);
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    this.logger.log(`Finding user with email: ${email}`);
+    const user = await this.userRepository.findOneBy({ email: email });
+    return Promise.resolve(user);
   }
 }

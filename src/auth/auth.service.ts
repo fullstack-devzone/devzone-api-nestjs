@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { LoginResponse } from '../users/users.dtos';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -11,10 +12,11 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.usersService.findByEmail(username);
+    const user = await this.usersService.getUserByEmail(username);
     if (user) {
       const isPasswordMatching = await bcrypt.compare(pass, user.password);
       if (isPasswordMatching) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ...result } = user;
         return result;
       }
@@ -22,15 +24,18 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
-    //console.log("login: user:", user)
-    const payload = { sub: user.id, username: user.name, email: user.email };
-    let expiryTime = new Date();
+  async login(user: any): Promise<LoginResponse> {
+    const payload = {
+      sub: user.id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
     const milliseconds = 24 * 60 * 10 * 1000; // 1 day
-    expiryTime = new Date(expiryTime.getTime() + milliseconds);
+    const expiryTime = new Date(new Date().getTime() + milliseconds);
     const token = this.jwtService.sign(payload, { expiresIn: '1d' });
-    //console.log("login: payload:", payload)
-    //console.log("login: token:", token)
+
     return {
       access_token: token,
       expires_at: expiryTime,
@@ -38,7 +43,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        roles: user.roles.map((role) => role.name),
+        role: user.role,
       },
     };
   }

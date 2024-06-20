@@ -1,16 +1,15 @@
-version: '3.5'
 services:
-
   devzone-db:
-    image: postgres:14.5-alpine
+    image: postgres:16-alpine
     container_name: devzone-db
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres
-      - PGDATA=/data/postgres
     ports:
       - "15432:5432"
+    volumes:
+      - ./migrations/:/docker-entrypoint-initdb.d/
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
@@ -19,13 +18,14 @@ services:
     restart: unless-stopped
 
   devzone-api-nestjs:
+    container_name: devzone-api-nestjs
     build:
-      context: ../
+      context: .
       #target: development
       target: production
     #command: npm run start:dev
     ports:
-      - "18080:8080"
+      - "8080:8080"
     restart: unless-stopped
     depends_on:
       - devzone-db
@@ -35,4 +35,5 @@ services:
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       DATABASE_DB: postgres
-      DATABASE_MIGRATION_ENABLED: "true"
+      DATABASE_MIGRATION_ENABLED: "false"
+      JWT_SECRET: "secretKey"

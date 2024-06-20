@@ -1,5 +1,5 @@
 # Reference: https://www.tomray.dev/nestjs-docker-production
-FROM node:18-alpine As development
+FROM node:22-alpine As development
 
 RUN apk --no-cache add --virtual builds-deps build-base python3 && \
     ln -sf python3 /usr/bin/python
@@ -11,7 +11,7 @@ RUN npm ci
 COPY --chown=node:node . .
 USER node
 
-FROM node:18-alpine As build
+FROM node:22-alpine As build
 RUN apk --no-cache add --virtual builds-deps build-base python3 && \
     ln -sf python3 /usr/bin/python
 

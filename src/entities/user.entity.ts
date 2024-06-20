@@ -2,14 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinTable,
-  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Role } from './role.entity';
-import { Link } from './link.entity';
+import { Post } from './post.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -25,28 +22,31 @@ export class User {
   @Column({ nullable: false })
   password: string;
 
+  @Column({ nullable: false })
+  role: string;
+
   @CreateDateColumn({
-    name: 'created_date',
+    name: 'created_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
   created_date: Date;
 
   @UpdateDateColumn({
-    name: 'updated_date',
+    name: 'updated_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
   updated_date: Date;
 
-  @ManyToMany(() => Role)
-  @JoinTable({
-    name: 'user_role',
-    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
-  })
-  roles: Role[];
+  @OneToMany(() => Post, (post) => post.created_by)
+  posts: Post[];
 
-  @OneToMany(() => Link, (link) => link.created_by)
-  links: Link[];
+  constructor(name: string, email: string, password: string, role: string) {
+    this.name = name;
+    this.email = email;
+    this.password = password;
+    this.role = role;
+    this.created_date = new Date();
+  }
 }

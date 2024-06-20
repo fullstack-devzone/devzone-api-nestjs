@@ -3,49 +3,41 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
-import { Tag } from './tag.entity';
 
-@Entity({ name: 'links' })
-export class Link {
+@Entity({ name: 'posts' })
+export class Post {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: false })
   title: string;
 
   @Column({ nullable: false })
   url: string;
 
+  @Column({ nullable: false })
+  content: string;
+
   @CreateDateColumn({
-    name: 'created_date',
+    name: 'created_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
   created_date: Date;
 
   @UpdateDateColumn({
-    name: 'updated_date',
+    name: 'updated_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
   updated_date: Date;
 
-  @ManyToOne(() => User, (user) => user.links, { nullable: false })
+  @ManyToOne(() => User, (user) => user.posts, { nullable: false })
   @JoinColumn({ name: 'created_by' })
   created_by: User;
-
-  @ManyToMany(() => Tag)
-  @JoinTable({
-    name: 'link_tag',
-    joinColumn: { name: 'link_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
-  })
-  tags: Tag[];
 }
